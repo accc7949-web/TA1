@@ -1,0 +1,20 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import { Buffer } from 'buffer';
+
+// Polyfill Buffer for client-side usage
+// FIX: Cast window to `any` to allow polyfilling Buffer without TypeScript errors.
+(window as any).Buffer = Buffer;
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
