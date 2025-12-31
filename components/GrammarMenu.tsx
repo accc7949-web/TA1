@@ -8,6 +8,8 @@ interface GrammarMenuProps {
   onSelectTopic: (topic: GrammarTopic) => void;
   onBack: () => void;
   title?: string;
+  uid?: string;
+  onViewCustomGrammar?: () => void;
 }
 
 const BookIcon = ({ color }: { color: string }) => (
@@ -16,11 +18,19 @@ const BookIcon = ({ color }: { color: string }) => (
     </svg>
 );
 
-const GrammarMenu: React.FC<GrammarMenuProps> = ({ topics, onSelectTopic, onBack, title = "Danh sách bài học" }) => {
+const GrammarMenu: React.FC<GrammarMenuProps> = ({ topics, onSelectTopic, onBack, title = "Danh sách bài học", uid, onViewCustomGrammar }) => {
   return (
     <div className="flex flex-col items-center w-full min-h-screen">
       <Header title={title} onBackToMenu={onBack} />
       <div className="flex flex-col items-center justify-center flex-grow w-full max-w-md pb-16">
+        {uid && onViewCustomGrammar && (
+          <button
+            onClick={onViewCustomGrammar}
+            className="w-full mb-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+          >
+            ✨ Ngữ Pháp Tùy Chỉnh
+          </button>
+        )}
         <div className="grid grid-cols-1 gap-4 w-full">
           {topics.map(topic => {
              const color = topic.colorTheme || 'blue';

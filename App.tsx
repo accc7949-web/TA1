@@ -1,8 +1,13 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { User } from 'firebase/auth';
 import { Flashcard, GameMode, Unit, GrammarTopic, GrammarCategory, DifficultyLevel, ExamPracticeConfig, PracticeType } from './types';
+import { observeAuthState, logoutUser, getUserProfile, UserProfile } from './services/auth';
 import Sidebar from './components/Sidebar';
 import DashboardHome from './components/DashboardHome';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import UserProfileComponent from './components/UserProfile';
 import FlashcardMode from './components/FlashcardMode';
 import QuizEnToVi from './components/QuizEnToVi';
 import QuizViToEn from './components/QuizViToEn';
@@ -22,11 +27,17 @@ import WritingTranslationMenu from './components/WritingTranslationMenu';
 import TranslationPractice from './components/TranslationPractice';
 import WritingPractice from './components/WritingPractice';
 import VocabSentencePractice from './components/VocabSentencePractice';
-
+import CustomGrammarManager from './components/CustomGrammarManager';
 
 import { ALL_VOCABULARY } from './constants'; 
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [loading, setLoading] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  
   // Đặt MAIN_MENU làm mặc định để hiển thị DashboardHome chứa đầy đủ tính năng
   const [gameMode, setGameMode] = useState<GameMode>(GameMode.MAIN_MENU);
   const [detailWord, setDetailWord] = useState<string | null>(null);
@@ -42,6 +53,7 @@ const App: React.FC = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('Medium');
   const [questionCount, setQuestionCount] = useState<number>(10);
   const [practiceType, setPracticeType] = useState<PracticeType>('MULTIPLE_CHOICE');
+  const [showCustomGrammar, setShowCustomGrammar] = useState(false);
 
   // Exam Prep State
   const [examConfig, setExamConfig] = useState<ExamPracticeConfig | null>(null);
@@ -50,10 +62,33 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Theo dõi trạng thái đăng nhập
+  useEffect(() => {
+    const unsubscribe = observeAuthState(async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        const profile = await getUserProfile(currentUser.uid);
+        setUserProfile(profile);
+      } else {
+        setUserProfile(null);
+      }
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+
   // Set default words for Quiz modes to prevent crashes
   useEffect(() => {
       setSelectedWords(ALL_VOCABULARY);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const handleShowDetail = (word: string) => {
     setDetailWord(word);
@@ -186,6 +221,8 @@ const App: React.FC = () => {
                 onSelectCategory={handleSelectGrammarCategory} 
                 onBack={() => setGameMode(GameMode.MAIN_MENU)} 
                 title="Ngữ Pháp EnglishMaster"
+                uid={user?.uid}
+                onCustomGrammar={() => setGameMode(GameMode.CUSTOM_GRAMMAR)}
               />
           );
 
@@ -221,6 +258,15 @@ const App: React.FC = () => {
                 onBack={() => setGameMode(GameMode.GRAMMAR_DIFFICULTY_SELECTION)}
                 showDetail={handleShowDetail}
             />
+          );
+
+      case GameMode.CUSTOM_GRAMMAR:
+          if (!user) return null;
+          return (
+              <CustomGrammarManager 
+                uid={user.uid}
+                onBack={() => setGameMode(GameMode.GRAMMAR_CATEGORY_SELECTION)}
+              />
           );
 
       // --- EXAM PREP 2025 ---
@@ -276,44 +322,112 @@ const App: React.FC = () => {
   }, [gameMode, selectedWords, selectedGrammarCategory, selectedGrammarTopic, grammarFlow, selectedDifficulty, questionCount, examConfig, practiceType]);
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-800 overflow-hidden font-sans">
-      
-      {/* Sidebar Navigation */}
-      <Sidebar 
-        currentMode={gameMode} 
-        onSelectMode={handleSelectMode} 
-        onSelectGrammarTopic={handleSidebarGrammarTopicSelect}
-        selectedGrammarTopicId={selectedGrammarTopic?.id}
-        onSelectVocabularyUnit={handleSidebarUnitSelect}
-        selectedVocabularyUnitName={selectedUnit?.name}
-        isMobileOpen={isSidebarOpen}
-        closeMobileSidebar={() => setIsSidebarOpen(false)}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
-      />
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        
-        {/* Mobile Header */}
-        <div className="md:hidden bg-white p-4 border-b border-slate-200 flex items-center justify-between shadow-sm z-10">
-           <span className="font-bold text-lg text-slate-700">EnglishMaster</span>
-           <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-600 bg-slate-100 rounded-md">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-           </button>
+    <>
+      {loading ? (
+        <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-700">Đang tải...</p>
+          </div>
         </div>
+      ) : !user ? (
+        authMode === 'login' ? (
+          <Login 
+            onSuccess={() => {}} 
+            onSwitchToSignup={() => setAuthMode('signup')}
+          />
+        ) : (
+          <Signup 
+            onSuccess={() => {}} 
+            onSwitchToLogin={() => setAuthMode('login')}
+          />
+        )
+      ) : (
+        <div className="flex h-screen bg-slate-50 text-slate-800 overflow-hidden font-sans">
+          <Sidebar 
+            currentMode={gameMode} 
+            onSelectMode={handleSelectMode} 
+            onSelectGrammarTopic={handleSidebarGrammarTopicSelect}
+            selectedGrammarTopicId={selectedGrammarTopic?.id}
+            onSelectVocabularyUnit={handleSidebarUnitSelect}
+            selectedVocabularyUnitName={selectedUnit?.name}
+            isMobileOpen={isSidebarOpen}
+            closeMobileSidebar={() => setIsSidebarOpen(false)}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+          />
 
-        {/* Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-0 md:p-6 lg:p-8 scroll-smooth">
-           <div className="max-w-5xl mx-auto">
-             {renderContent()}
-           </div>
-        </main>
+          <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            <div className="md:hidden bg-white p-4 border-b border-slate-200 flex items-center justify-between shadow-sm z-10">
+               <span className="font-bold text-lg text-slate-700">EnglishMaster</span>
+               <div className="flex gap-2">
+                 <button 
+                   onClick={() => setShowProfileModal(true)}
+                   className="p-2 text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200"
+                   title="Xem thông tin"
+                 >
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                 </button>
+                 <button 
+                   onClick={() => setIsSidebarOpen(true)} 
+                   className="p-2 text-slate-600 bg-slate-100 rounded-md"
+                 >
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                 </button>
+                 <button 
+                   onClick={handleLogout}
+                   className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
+                 >
+                   Đăng xuất
+                 </button>
+               </div>
+            </div>
 
-      </div>
+            {/* Scrollable Content */}
+            <main className="flex-1 overflow-y-auto p-0 md:p-6 lg:p-8 scroll-smooth">
+               <div className="max-w-5xl mx-auto">
+                 <div className="hidden md:flex justify-between items-center mb-6">
+                   <div className="flex items-center gap-3">
+                     <h1 className="text-2xl font-bold text-slate-800">Xin chào, {user.displayName || user.email}</h1>
+                     {userProfile?.isAdmin && (
+                       <span className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
+                         ADMIN
+                       </span>
+                     )}
+                   </div>
+                   <div className="flex gap-3">
+                     <button 
+                       onClick={() => setShowProfileModal(true)}
+                       className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                     >
+                       Thông tin
+                     </button>
+                     <button 
+                       onClick={handleLogout}
+                       className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                     >
+                       Đăng xuất
+                     </button>
+                   </div>
+                 </div>
+                 {renderContent()}
+               </div>
+            </main>
 
-      {detailWord && <WordDetailModal word={detailWord} onClose={() => setDetailWord(null)} showDetail={handleShowDetail} />}
-    </div>
+            <>
+              {showProfileModal && user && (
+                <UserProfileComponent 
+                  user={user} 
+                  onClose={() => setShowProfileModal(false)}
+                />
+              )}
+
+              {detailWord && <WordDetailModal word={detailWord} onClose={() => setDetailWord(null)} showDetail={handleShowDetail} />}
+            </>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

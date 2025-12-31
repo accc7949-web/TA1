@@ -6,6 +6,8 @@ import Header from './common/Header';
 interface GrammarDashboardProps {
   onSelectMode: (mode: GameMode) => void;
   onBack: () => void;
+  uid?: string;
+  onViewCustomGrammar?: () => void;
 }
 
 const BookOpenIcon = () => (
@@ -28,12 +30,25 @@ const AcademicCapIcon = () => (
     </svg>
 );
 
-const GrammarDashboard: React.FC<GrammarDashboardProps> = ({ onSelectMode, onBack }) => {
+const GrammarDashboard: React.FC<GrammarDashboardProps> = ({ onSelectMode, onBack, uid, onViewCustomGrammar }) => {
   return (
     <div className="flex flex-col items-center w-full min-h-screen">
       <Header title="Ngữ Pháp & Luyện thi" onBackToMenu={onBack} />
       <div className="flex flex-col items-center justify-center flex-grow w-full max-w-md pb-16">
         <div className="grid grid-cols-1 gap-6 w-full">
+          {uid && onViewCustomGrammar && (
+            <button
+              onClick={onViewCustomGrammar}
+              className="flex items-center text-left p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="h-10 w-10 mr-4 flex items-center justify-center">✨</div>
+              <div>
+                <h2 className="text-xl font-semibold">Ngữ Pháp Tùy Chỉnh</h2>
+                <p className="text-blue-100">Tạo units và bài học của riêng bạn</p>
+              </div>
+            </button>
+          )}
+          
           <button
             onClick={() => onSelectMode(GameMode.GRAMMAR_THEORY_SELECTION)}
             className="flex items-center text-left p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-indigo-50 transition-all duration-300 transform hover:-translate-y-1"

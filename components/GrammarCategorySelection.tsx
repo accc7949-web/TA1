@@ -8,6 +8,8 @@ interface GrammarCategorySelectionProps {
   onSelectCategory: (category: GrammarCategory) => void;
   onBack: () => void;
   title?: string;
+  uid?: string;
+  onCustomGrammar?: () => void;
 }
 
 const FolderIcon = () => (
@@ -16,12 +18,25 @@ const FolderIcon = () => (
     </svg>
 );
 
-const GrammarCategorySelection: React.FC<GrammarCategorySelectionProps> = ({ onSelectCategory, onBack, title = "Chọn nhóm ngữ pháp" }) => {
+const GrammarCategorySelection: React.FC<GrammarCategorySelectionProps> = ({ onSelectCategory, onBack, title = "Chọn nhóm ngữ pháp", uid, onCustomGrammar }) => {
   return (
     <div className="flex flex-col items-center w-full min-h-screen">
       <Header title={title} onBackToMenu={onBack} />
       <div className="flex flex-col items-center justify-center flex-grow w-full max-w-md pb-16">
         <div className="grid grid-cols-1 gap-6 w-full">
+          {uid && onCustomGrammar && (
+            <button
+              onClick={onCustomGrammar}
+              className="flex items-center text-left p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="h-10 w-10 mr-4 flex items-center justify-center text-2xl">✨</div>
+              <div>
+                <h2 className="text-xl font-bold">Ngữ Pháp Tùy Chỉnh</h2>
+                <p className="text-blue-100 mt-1">Tạo units và bài học của riêng bạn</p>
+              </div>
+            </button>
+          )}
+          
           {GRAMMAR_CATEGORIES.map(category => (
             <button
               key={category.id}

@@ -2,7 +2,19 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { WordDetails, GrammarQuestion, DifficultyLevel, QuizResult, GrammarAssessment, ExamQuestion, ExamPracticeConfig, TranslationFeedback, WritingFeedback, MatchingPair, WritingQuestion, ErrorCorrectionQuestion, GrammarNuanceQuestion } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
+
+let ai: GoogleGenAI | null = null;
+
+export function getAI(): GoogleGenAI {
+  if (!ai) {
+    if (!apiKey) {
+      throw new Error("API key not found. Set VITE_GEMINI_API_KEY in your .env file");
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+}
 
 const modelName = 'gemini-3-flash-preview';
 
@@ -135,7 +147,7 @@ const assessmentSchema: Schema = {
 export const getWordDetails = async (word: string): Promise<WordDetails | null> => {
     try {
         const prompt = `Provide detailed definition for "${word}" in Vietnamese with IPA and examples.`;
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { responseMimeType: "application/json", responseSchema: definitionSchema },
@@ -207,7 +219,7 @@ export const generateGrammarQuiz = async (topicTitle: string, difficulty: Diffic
            - **relatedTheory**: State the **USAGE CONTEXT (Cách dùng)** explicitly. Format: "Dấu hiệu/Ngữ cảnh -> Tên thì/Cấu trúc".
         `;
         
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { responseMimeType: "application/json", responseSchema: quizSchema },
@@ -244,7 +256,7 @@ export const generateErrorCorrectionQuiz = async (topicTitle: string, difficulty
         4. 'relatedTheory' should state the rule/signal words clearly.
         `;
 
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { responseMimeType: "application/json", responseSchema: errorCorrectionSchema },
@@ -283,7 +295,7 @@ export const generateNuanceQuiz = async (topicTitle: string, count: number = 5, 
         - explanation: "Thì Quá khứ đơn diễn tả hành động đã chấm dứt hoàn toàn, không liên quan đến hiện tại."
         `;
 
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { responseMimeType: "application/json", responseSchema: nuanceSchema },
@@ -298,7 +310,7 @@ export const generateNuanceQuiz = async (topicTitle: string, count: number = 5, 
 export const evaluateQuizPerformance = async (topicTitle: string, results: QuizResult[]): Promise<GrammarAssessment | null> => {
      try {
         const prompt = `Analyze these results for topic "${topicTitle}": ${JSON.stringify(results)}. Provide a friendly but professional assessment in Vietnamese. Highlight exactly which sub-rules the user missed.`;
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { responseMimeType: "application/json", responseSchema: assessmentSchema },
@@ -316,7 +328,7 @@ export const generateMatchingPairs = async (topicTitle: string): Promise<Matchin
         Right side: The corresponding Name or Vietnamese Definition.
         Ensure pairs are distinct and not easily guessable without knowing the rule.`;
         
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { responseMimeType: "application/json", responseSchema: matchingSchema },
@@ -335,7 +347,7 @@ export const generateWritingQuestions = async (topicTitle: string, focusWeakness
         Contexts should be academic or formal English.
         Provide hints in Vietnamese that explain the context (e.g., "Dấu hiệu 'since' chỉ thì hoàn thành").`;
         
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { responseMimeType: "application/json", responseSchema: writingQuestionSchema },
@@ -352,7 +364,7 @@ export const evaluateGrammarWriting = async (topic: string, question: string, us
         Check if the grammar is correct. Ignore capitalization or minor punctuation unless necessary for the rule.
         Return JSON {isCorrect: boolean, feedback: string (in Vietnamese, explain why right/wrong)}.`;
         
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: {
@@ -384,7 +396,7 @@ export const generateExamPractice = async (config: ExamPracticeConfig): Promise<
         - **Context**: Must be informative and educational.
         `;
         
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt + " Explanation in Vietnamese.",
             config: {
@@ -433,7 +445,7 @@ export const generateTranslationTask = async (topic: string, vocabularyContext?:
         ${vocabInstruction}
         The text must be coherent, grammatically complex, and sound natural (native-like).`;
         
-        const response = await ai.models.generateContent({ model: modelName, contents: prompt });
+        const response = await getAI().models.generateContent({ model: modelName, contents: prompt });
         return response.text.trim();
     } catch (error) {
         return null;
@@ -453,7 +465,7 @@ export const evaluateTranslation = async (sourceEn: string, userVi: string): Pro
         
         Return JSON.`;
         
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { 
@@ -497,7 +509,7 @@ export const generateWritingTask = async (mode: 'PARAGRAPH' | 'TRANSLATE_TO_EN' 
         ${instruction}
         Output ONLY the task text.`;
         
-        const response = await ai.models.generateContent({ model: modelName, contents: prompt });
+        const response = await getAI().models.generateContent({ model: modelName, contents: prompt });
         return response.text.trim();
     } catch (error) {
          return null;
@@ -513,7 +525,7 @@ export const evaluateWriting = async (taskText: string, userText: string): Promi
         Analyze: Grammar, Vocabulary, Coherence.
         Provide a detailed JSON response with corrections and a score.`;
         
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: modelName,
             contents: prompt,
             config: { 
@@ -556,7 +568,7 @@ export const generateSentencePracticeTask = async (word: string, meaning: string
         2. Do NOT create simple/boring sentences like "This is a ${word}".
         3. Output ONLY the Vietnamese sentence.`;
         
-        const response = await ai.models.generateContent({ model: modelName, contents: prompt });
+        const response = await getAI().models.generateContent({ model: modelName, contents: prompt });
         return response.text.trim();
     } catch (error) {
         return null;

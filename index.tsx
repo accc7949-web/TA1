@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { Buffer } from 'buffer';
+import './index.css';
 
 // Polyfill Buffer for client-side usage
 // FIX: Cast window to `any` to allow polyfilling Buffer without TypeScript errors.

@@ -228,6 +228,7 @@ export enum GameMode {
   GRAMMAR_DIFFICULTY_SELECTION,
   GRAMMAR_PRACTICE_MODE,
   GRAMMAR_AI_CHAT,
+  CUSTOM_GRAMMAR, // User created custom grammar units
 
   // Exam Prep 2025 Section
   EXAM_PREP_MENU, // Select type: Notice, Arrangement, Reading...
@@ -253,4 +254,27 @@ export interface WordDetails {
         commonMeanings: string;
         meanings: WordDefinition[];
     }[];
+}
+
+// Custom Grammar Units - User Created
+export interface CustomGrammarLesson {
+  id: string;
+  title: string;
+  description: string;
+  content: string; // Markdown supported
+  examples: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  createdAt: number;
+  updatedAt: number;
+  isAIGenerated?: boolean;
+}
+
+export interface CustomGrammarUnit {
+  id: string;
+  uid: string; // User ID
+  name: string;
+  description: string;
+  lessons: CustomGrammarLesson[];
+  createdAt: number;
+  updatedAt: number;
 }
