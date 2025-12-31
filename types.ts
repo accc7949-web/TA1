@@ -229,6 +229,7 @@ export enum GameMode {
   GRAMMAR_PRACTICE_MODE,
   GRAMMAR_AI_CHAT,
   CUSTOM_GRAMMAR, // User created custom grammar units
+  CUSTOM_VOCABULARY, // User created custom vocabulary units
 
   // Exam Prep 2025 Section
   EXAM_PREP_MENU, // Select type: Notice, Arrangement, Reading...
@@ -275,6 +276,26 @@ export interface CustomGrammarUnit {
   name: string;
   description: string;
   lessons: CustomGrammarLesson[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+// Custom Vocabulary Units - User Created
+export interface CustomVocabModule {
+  id: string;
+  name: string; // Tên học phần
+  words: Flashcard[];
+  createdAt: number;
+  updatedAt: number;
+  isAIGenerated?: boolean;
+}
+
+export interface CustomVocabUnit {
+  id: string;
+  uid: string; // User ID
+  name: string;
+  description: string;
+  modules: CustomVocabModule[]; // Các học phần
   createdAt: number;
   updatedAt: number;
 }

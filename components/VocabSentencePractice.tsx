@@ -85,15 +85,35 @@ const VocabSentencePractice: React.FC<VocabSentencePracticeProps> = ({ vocabular
         setUserText('');
         setFeedback(null);
         
-        const text = await generateSentencePracticeTask(word.word.split('(')[0].trim(), word.meaning);
-        
-        if (text) {
-            setTaskText(text);
-            setPhase('INPUT');
-        } else {
-            // Error handling: Skip this word if generation fails to avoid getting stuck
-            setQueue(prev => prev.slice(1));
-            setCurrentWord(null);
+        try {
+            const text = await generateSentencePracticeTask(word.word.split('(')[0].trim(), word.meaning);
+            
+            if (text) {
+                setTaskText(text);
+                setPhase('INPUT');
+            } else {
+                // Error handling: Skip this word if generation fails to avoid getting stuck
+                console.warn(`Failed to generate task for word: ${word.word}`);
+                if (queue.length > 1) {
+                    setQueue(prev => prev.slice(1));
+                    setCurrentWord(null);
+                } else {
+                    // If this is the last word and generation fails, show error
+                    alert('Không thể tạo câu hỏi. Vui lòng kiểm tra kết nối hoặc API key.');
+                    setPhase('INPUT'); // Set phase to allow user to go back
+                }
+            }
+        } catch (error: any) {
+            console.error('Error in generateNewTask:', error);
+            const errorMessage = error?.message || 'Lỗi khi tạo câu hỏi. Vui lòng thử lại.';
+            alert(errorMessage);
+            // If API key error, allow user to go back
+            if (errorMessage.includes('API key')) {
+                setPhase('INPUT');
+            } else if (queue.length > 1) {
+                setQueue(prev => prev.slice(1));
+                setCurrentWord(null);
+            }
         }
     };
 

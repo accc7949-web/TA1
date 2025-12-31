@@ -111,6 +111,19 @@ const DashboardHome: React.FC<HubProps> = ({ onSelectMode, onSelectGrammarTopic,
                                         )}
                                     </div>
                                 ))}
+                                {/* Custom Vocabulary Button */}
+                                <div className="mt-4 pt-4 border-t border-slate-100">
+                                    <button 
+                                        onClick={() => onSelectMode(GameMode.CUSTOM_VOCABULARY)}
+                                        className="w-full flex items-center justify-between p-4 rounded-2xl transition-all bg-purple-50 text-purple-700 hover:bg-purple-100 group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl">📚</span>
+                                            <span className="font-bold">Từ Vựng Tùy Chỉnh</span>
+                                        </div>
+                                        <ChevronRightIcon />
+                                    </button>
+                                </div>
                             </>
                         ) : (
                             <>

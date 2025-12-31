@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { WordDetails, GrammarQuestion, DifficultyLevel, QuizResult, GrammarAssessment, ExamQuestion, ExamPracticeConfig, TranslationFeedback, WritingFeedback, MatchingPair, WritingQuestion, ErrorCorrectionQuestion, GrammarNuanceQuestion } from "../types";
@@ -569,8 +570,144 @@ export const generateSentencePracticeTask = async (word: string, meaning: string
         3. Output ONLY the Vietnamese sentence.`;
         
         const response = await getAI().models.generateContent({ model: modelName, contents: prompt });
-        return response.text.trim();
-    } catch (error) {
+        
+        if (!response || !response.text) {
+            console.error('AI response is empty');
+            return null;
+        }
+        
+        const text = response.text.trim();
+        return text.length > 0 ? text : null;
+    } catch (error: any) {
+        console.error('Error generating sentence practice task:', error);
+        // Check if it's an API key error
+        if (error?.code === 403 || error?.message?.includes('API key')) {
+            throw new Error('API key không hợp lệ hoặc đã bị chặn. Vui lòng kiểm tra lại API key trong file .env');
+        }
         return null;
+    }
+};
+
+const vocabModuleSchema: Schema = {
+    type: Type.ARRAY,
+    items: {
+        type: Type.OBJECT,
+        properties: {
+            word: { type: Type.STRING },
+            pronunciation: { type: Type.STRING },
+            meaning: { type: Type.STRING },
+            examples: { type: Type.ARRAY, items: { type: Type.STRING } },
+            synonyms: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        word: { type: Type.STRING },
+                        pos: { type: Type.STRING },
+                        meaning: { type: Type.STRING },
+                        examples: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    },
+                    required: ["word", "pos", "meaning"]
+                }
+            },
+            antonyms: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        word: { type: Type.STRING },
+                        pos: { type: Type.STRING },
+                        meaning: { type: Type.STRING },
+                        examples: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    },
+                    required: ["word", "pos", "meaning"]
+                }
+            }
+        },
+        required: ["word", "pronunciation", "meaning", "examples"]
+    }
+};
+
+/**
+ * Generate a complete vocabulary module from a list of English words
+ * Returns flashcards with pronunciation, meaning, examples, synonyms, and antonyms
+ */
+export const generateVocabModuleFromWords = async (words: string[]): Promise<import('../types').Flashcard[]> => {
+    try {
+        // Clean words - remove Vietnamese meanings in parentheses if present
+        const cleanWords = words.map(w => {
+            // Remove Vietnamese meaning in parentheses like "return (trả lại)" -> "return"
+            const match = w.trim().match(/^([^(]+)/);
+            return match ? match[1].trim() : w.trim();
+        }).filter(w => w.length > 0);
+
+        if (cleanWords.length === 0) {
+            throw new Error('Không có từ nào hợp lệ');
+        }
+
+        const wordsList = cleanWords.join(', ');
+        const prompt = `Create a complete vocabulary learning module for these English words: ${wordsList}.
+
+For EACH word, provide:
+1. **word**: The word with part of speech in parentheses (e.g., "sustain (v)")
+2. **pronunciation**: IPA phonetic transcription (e.g., "/sə'stein/")
+3. **meaning**: Vietnamese meaning
+4. **examples**: 2-3 example sentences in English
+5. **synonyms**: 2-3 synonyms with their part of speech, Vietnamese meaning, and 1 example each
+6. **antonyms**: 1-2 antonyms with their part of speech, Vietnamese meaning, and 1 example each
+
+Make sure all information is accurate and educational. The examples should be natural and practical.`;
+
+        let response;
+        try {
+            response = await getAI().models.generateContent({
+                model: modelName,
+                contents: prompt,
+                config: { responseMimeType: "application/json", responseSchema: vocabModuleSchema },
+            });
+        } catch (apiError: any) {
+            // Check for API key errors
+            if (apiError?.code === 403 || apiError?.message?.includes('API key') || apiError?.error?.code === 403) {
+                throw new Error('API key không hợp lệ hoặc đã bị chặn. Vui lòng kiểm tra lại API key trong file .env');
+            }
+            throw apiError;
+        }
+
+        if (!response || !response.text) {
+            throw new Error('API không trả về dữ liệu');
+        }
+
+        const responseText = response.text.trim();
+        if (!responseText) {
+            throw new Error('API trả về dữ liệu rỗng');
+        }
+
+        let flashcards: import('../types').Flashcard[];
+        try {
+            flashcards = JSON.parse(responseText) as import('../types').Flashcard[];
+        } catch (parseError) {
+            console.error('Parse error:', parseError);
+            console.error('Response text:', responseText);
+            throw new Error('Không thể parse dữ liệu từ AI');
+        }
+
+        if (!Array.isArray(flashcards) || flashcards.length === 0) {
+            throw new Error('AI không tạo được từ vựng nào');
+        }
+        
+        // Add IDs to flashcards and ensure all required fields
+        return flashcards.map((card, index) => ({
+            id: Date.now() + index,
+            word: card.word || '',
+            pronunciation: card.pronunciation || '',
+            meaning: card.meaning || '',
+            examples: Array.isArray(card.examples) ? card.examples : [],
+            synonyms: Array.isArray(card.synonyms) ? card.synonyms : [],
+            antonyms: Array.isArray(card.antonyms) ? card.antonyms : [],
+        }));
+    } catch (error: any) {
+        console.error('Error generating vocab module:', error);
+        const errorMessage = error?.message || 'Lỗi không xác định khi tạo học phần';
+        throw new Error(errorMessage);
     }
 };

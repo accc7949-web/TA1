@@ -28,6 +28,8 @@ import TranslationPractice from './components/TranslationPractice';
 import WritingPractice from './components/WritingPractice';
 import VocabSentencePractice from './components/VocabSentencePractice';
 import CustomGrammarManager from './components/CustomGrammarManager';
+import CustomVocabularyManager from './components/CustomVocabularyManager';
+import { CustomVocabUnit } from './types';
 
 import { ALL_VOCABULARY } from './constants'; 
 
@@ -120,6 +122,31 @@ const App: React.FC = () => {
     setGameMode(GameMode.FLASHCARD_MENU);
   };
 
+  // Convert CustomVocabUnit to Unit format for compatibility
+  const handleSelectCustomVocabUnit = (customUnit: CustomVocabUnit) => {
+    // Convert modules to parts format
+    const parts = customUnit.modules.map(module => ({
+      name: module.name,
+      words: module.words || [],
+    }));
+    
+    // Get all words from all modules
+    const allWords = parts.flatMap(p => p.words);
+    
+    // Check if there are any words
+    if (allWords.length === 0) {
+      alert('Unit này chưa có từ vựng nào. Vui lòng thêm học phần trước.');
+      return;
+    }
+    
+    const unit: Unit = {
+      name: customUnit.name,
+      parts: parts,
+    };
+    
+    handleSidebarUnitSelect(unit);
+  };
+
 
   // --- Grammar Logic ---
   const handleSelectGrammarCategory = (category: GrammarCategory) => {
@@ -172,15 +199,30 @@ const App: React.FC = () => {
       case GameMode.FLASHCARD_MENU:
         return <FlashcardMenu setGameMode={setGameMode} onBackToMenu={() => setGameMode(GameMode.MAIN_MENU)} />;
       case GameMode.FLASHCARD_VIEW_ALL:
+        if (selectedWords.length === 0) {
+          return <div className="p-8 text-center text-gray-600">Không có từ vựng để hiển thị. Vui lòng chọn một unit.</div>;
+        }
         return <ViewAllCards vocabulary={selectedWords} onBack={() => setGameMode(GameMode.FLASHCARD_MENU)} showDetail={handleShowDetail} />;
       case GameMode.FLASHCARDS:
+        if (selectedWords.length === 0) {
+          return <div className="p-8 text-center text-gray-600">Không có từ vựng để học. Vui lòng chọn một unit.</div>;
+        }
         return <FlashcardMode vocabulary={selectedWords} onBackToMenu={() => setGameMode(GameMode.FLASHCARD_MENU)} showDetail={handleShowDetail} />;
       
       case GameMode.QUIZ_EN_TO_VI:
+        if (selectedWords.length === 0) {
+          return <div className="p-8 text-center text-gray-600">Không có từ vựng để làm quiz. Vui lòng chọn một unit.</div>;
+        }
         return <QuizEnToVi vocabulary={selectedWords} onBackToMenu={() => setGameMode(GameMode.FLASHCARD_MENU)} />;
       case GameMode.QUIZ_VI_TO_EN:
+        if (selectedWords.length === 0) {
+          return <div className="p-8 text-center text-gray-600">Không có từ vựng để làm quiz. Vui lòng chọn một unit.</div>;
+        }
         return <QuizViToEn vocabulary={selectedWords} onBackToMenu={() => setGameMode(GameMode.FLASHCARD_MENU)} />;
        case GameMode.VOCAB_SENTENCE_PRACTICE:
+            if (selectedWords.length === 0) {
+              return <div className="p-8 text-center text-gray-600">Không có từ vựng để luyện tập. Vui lòng chọn một unit.</div>;
+            }
             return <VocabSentencePractice 
                         vocabulary={selectedWords} 
                         onBack={() => setGameMode(GameMode.FLASHCARD_MENU)} 
@@ -266,6 +308,16 @@ const App: React.FC = () => {
               <CustomGrammarManager 
                 uid={user.uid}
                 onBack={() => setGameMode(GameMode.GRAMMAR_CATEGORY_SELECTION)}
+              />
+          );
+
+      case GameMode.CUSTOM_VOCABULARY:
+          if (!user) return null;
+          return (
+              <CustomVocabularyManager 
+                uid={user.uid}
+                onBack={() => setGameMode(GameMode.MAIN_MENU)}
+                onSelectUnit={handleSelectCustomVocabUnit}
               />
           );
 
