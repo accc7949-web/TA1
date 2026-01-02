@@ -10,13 +10,14 @@ interface HeaderProps {
   user?: User | null;
   userProfile?: UserProfile | null;
   onShowProfile?: () => void;
+  onShowChat?: () => void;
 }
 
 const BackIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
 );
 
-const Header: React.FC<HeaderProps> = ({ title, onBackToMenu, user, userProfile, onShowProfile }) => {
+const Header: React.FC<HeaderProps> = ({ title, onBackToMenu, user, userProfile, onShowProfile, onShowChat }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   const getInitial = () => {
@@ -61,27 +62,40 @@ const Header: React.FC<HeaderProps> = ({ title, onBackToMenu, user, userProfile,
       </button>
       <h1 className="text-2xl font-bold text-slate-700">{title}</h1>
       
-      {/* Avatar and Profile Menu */}
-      <div className="relative">
+      {/* Chat and Avatar Section */}
+      <div className="flex items-center gap-3">
+        {/* Chat Button */}
         <button
-          onClick={() => {
-            setShowMenu(!showMenu);
-            if (!showMenu && onShowProfile) onShowProfile();
-          }}
-          className={`relative w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor()} flex items-center justify-center text-white font-bold text-sm hover:ring-2 hover:ring-offset-2 transition-all ${getAvatarGlow()} hover:${getRoleBorderColor()}`}
-          title={userProfile?.displayName || 'Profile'}
+          onClick={() => onShowChat?.()}
+          className="p-2 rounded-full hover:bg-slate-200 transition-colors relative"
+          title="Open Chat"
         >
-          {getInitial()}
+          <span className="text-xl">💬</span>
+          <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></div>
         </button>
-        
-        {/* Role Badge */}
-        {userProfile?.role && userProfile.role !== 'user' && (
-          <div className={`absolute top-0 right-0 w-3 h-3 rounded-full border border-white ${
-            userProfile.role === 'admin' ? 'bg-yellow-400' :
-            userProfile.role === 'moderator' ? 'bg-purple-400' :
-            userProfile.role === 'ai_bot' ? 'bg-cyan-400' : 'bg-blue-400'
-          }`}></div>
-        )}
+
+        {/* Avatar and Profile Menu */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setShowMenu(!showMenu);
+              if (!showMenu && onShowProfile) onShowProfile();
+            }}
+            className={`relative w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor()} flex items-center justify-center text-white font-bold text-sm hover:ring-2 hover:ring-offset-2 transition-all ${getAvatarGlow()} hover:${getRoleBorderColor()}`}
+            title={userProfile?.displayName || 'Profile'}
+          >
+            {getInitial()}
+          </button>
+          
+          {/* Role Badge */}
+          {userProfile?.role && userProfile.role !== 'user' && (
+            <div className={`absolute top-0 right-0 w-3 h-3 rounded-full border border-white ${
+              userProfile.role === 'admin' ? 'bg-yellow-400' :
+              userProfile.role === 'moderator' ? 'bg-purple-400' :
+              userProfile.role === 'ai_bot' ? 'bg-cyan-400' : 'bg-blue-400'
+            }`}></div>
+          )}
+        </div>
       </div>
     </header>
   );

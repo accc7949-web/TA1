@@ -310,6 +310,59 @@ export interface CustomVocabUnit {
   updatedAt: number;
 }
 
+// Chat System Types
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  senderRole?: UserRole;
+  content: string;
+  timestamp: number;
+  isAIResponse?: boolean;
+  mentions?: string[]; // @usernames mentioned
+  attachments?: {
+    type: 'image' | 'file';
+    url: string;
+    name: string;
+  }[];
+}
+
+export type ChatType = 'direct' | 'community' | 'ai';
+
+export interface Conversation {
+  id: string;
+  type: ChatType;
+  name: string;
+  description?: string;
+  participants: string[]; // UIDs of participants
+  lastMessage?: string;
+  lastMessageTime?: number;
+  lastMessageSender?: string;
+  unreadCount?: number;
+  avatar?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ChatRoom {
+  id: string;
+  type: ChatType;
+  name: string;
+  description: string;
+  icon?: string;
+  participants: Array<{
+    uid: string;
+    displayName: string;
+    avatar?: string;
+    role?: UserRole;
+    joinedAt: number;
+  }>;
+  createdAt: number;
+  updatedAt: number;
+}
+
 // Role types for user profiles
 export type UserRole = 'admin' | 'user' | 'moderator' | 'ai_bot';
 

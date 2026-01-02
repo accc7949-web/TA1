@@ -72,7 +72,28 @@ export const registerUser = async (email: string, password: string, displayName:
 export const loginUser = async (email: string, password: string): Promise<User | null> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
+    const user = userCredential.user;
+    
+    // Check if user should be admin and update if needed
+    const isAdminUser = user.uid === "OvBehauvk4W55b7ovcnNRk3v0ps1" || user.email === "shabbysan483@gmail.com";
+    if (isAdminUser) {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data() as UserProfile;
+        if (userData.role !== 'admin') {
+          // Update role to admin if not already
+          await updateDoc(userRef, {
+            role: 'admin',
+            isAdmin: true,
+            updatedAt: Timestamp.now()
+          });
+          console.log('User role updated to admin:', user.email);
+        }
+      }
+    }
+    
+    return user;
   } catch (error) {
     console.error("Login error:", error);
     throw error;

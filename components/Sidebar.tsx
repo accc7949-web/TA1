@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse
 }) => {
   // Mặc định là 'grammar'
-  const [activeSection, setActiveSection] = useState<'vocab' | 'grammar'>('grammar');
+  const [activeSection, setActiveSection] = useState<'vocab' | 'grammar' | 'chat'>('grammar');
 
   // Sidebar vocabulary display options
   const vocabGrade = CLASSROOMS[0].grades.find(g => g.name === 'Lớp 12');
@@ -109,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         ))}
                     </div>
                 </div>
-            ) : (
+            ) : activeSection === 'grammar' ? (
                 <div className={isCollapsed ? 'md:hidden' : 'space-y-4 pt-4 border-t border-slate-50'}>
                     <span className="px-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Bài học Ngữ pháp</span>
                     <div className="space-y-1">
@@ -126,6 +126,18 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 ))}
                             </div>
                         ))}
+                    </div>
+                </div>
+            ) : (
+                <div className={isCollapsed ? 'md:hidden' : 'space-y-4 pt-4 border-t border-slate-50'}>
+                    <span className="px-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Chat AI</span>
+                    <div className="space-y-1">
+                        <button 
+                            onClick={() => { onSelectMode(GameMode.GRAMMAR_AI_CHAT); closeMobileSidebar(); }}
+                            className="w-full text-left p-4 rounded-2xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"
+                        >
+                            Chat Với AI
+                        </button>
                     </div>
                 </div>
             )}
@@ -150,9 +162,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {activeSection === 'grammar' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
                  </button>
 
+                 <button 
+                    onClick={() => setActiveSection('chat')}
+                    className={`w-8 h-8 rounded-full transition-all flex items-center justify-center ${activeSection === 'chat' ? 'bg-red-500 shadow-lg scale-110 ring-4 ring-red-100' : 'bg-red-200 opacity-50 hover:opacity-100'}`}
+                    title="Mục Chat"
+                 >
+                    {activeSection === 'chat' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                 </button>
+
                  {!isCollapsed && (
                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                        {activeSection === 'vocab' ? 'Vocab List' : 'Grammar List'}
+                        {activeSection === 'vocab' ? 'Vocab List' : activeSection === 'grammar' ? 'Grammar List' : 'Chat'}
                      </span>
                  )}
             </div>

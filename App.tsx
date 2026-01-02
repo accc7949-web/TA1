@@ -31,6 +31,7 @@ import CustomGrammarManager from './components/CustomGrammarManager';
 import CustomVocabularyManager from './components/CustomVocabularyManager';
 import ModuleSelection from './components/ModuleSelection';
 import CustomModuleSelection from './components/CustomModuleSelection';
+import ChatPanel from './components/ChatPanel';
 import { CustomVocabUnit } from './types';
 
 import { ALL_VOCABULARY } from './constants'; 
@@ -41,6 +42,7 @@ const App: React.FC = () => {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showChatPanel, setShowChatPanel] = useState(false);
   
   // Đặt MAIN_MENU làm mặc định để hiển thị DashboardHome chứa đầy đủ tính năng
   const [gameMode, setGameMode] = useState<GameMode>(GameMode.MAIN_MENU);
@@ -439,6 +441,14 @@ const App: React.FC = () => {
                <span className="font-bold text-lg text-slate-700">EnglishMaster</span>
                <div className="flex gap-2 items-center">
                  <button 
+                   onClick={() => setShowChatPanel(true)}
+                   className="p-2 rounded-full hover:bg-slate-200 transition-colors relative"
+                   title="Open Chat"
+                 >
+                   <span className="text-xl">💬</span>
+                   <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                 </button>
+                 <button 
                    onClick={() => setShowProfileModal(true)}
                    className={`w-10 h-10 rounded-full bg-gradient-to-br ${
                      userProfile?.role ? ROLE_COLORS[userProfile.role].bg : 'from-blue-400 to-blue-600'
@@ -475,6 +485,12 @@ const App: React.FC = () => {
                    </div>
                    <div className="flex gap-3">
                      <button 
+                       onClick={() => setShowChatPanel(true)}
+                       className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2"
+                     >
+                       💬 Chat
+                     </button>
+                     <button 
                        onClick={() => setShowProfileModal(true)}
                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
                      >
@@ -500,6 +516,13 @@ const App: React.FC = () => {
                   onLogout={handleLogout}
                 />
               )}
+
+              <ChatPanel 
+                user={user}
+                userProfile={userProfile}
+                isOpen={showChatPanel}
+                onClose={() => setShowChatPanel(false)}
+              />
 
               {detailWord && <WordDetailModal word={detailWord} onClose={() => setDetailWord(null)} showDetail={handleShowDetail} />}
             </>

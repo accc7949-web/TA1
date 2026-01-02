@@ -5,3 +5,45 @@
 body {
   background-color: #f0f4f8;
 }
+
+/* Chat Panel Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.chat-panel-enter {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.chat-panel-exit {
+  animation: slideOutRight 0.3s ease-out;
+}
+
+/* Smooth scrolling for chat messages */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Message input styling */
+.chat-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+

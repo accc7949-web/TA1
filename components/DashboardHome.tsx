@@ -119,7 +119,7 @@ const DashboardHome: React.FC<HubProps> = ({ onSelectMode, onSelectGrammarTopic,
                                     </div>
                                 )}
                             </>
-                        ) : (
+                        ) : mainTab === 'grammar' ? (
                             <>
                                 {GRAMMAR_CATEGORIES.map(cat => (
                                     <div key={cat.id} className="space-y-1">
@@ -141,6 +141,21 @@ const DashboardHome: React.FC<HubProps> = ({ onSelectMode, onSelectGrammarTopic,
                                         ))}
                                     </div>
                                 ))}
+                            </>
+                        ) : (
+                            <>
+                                {/* Chat Section */}
+                                <div className="text-center py-8 px-4">
+                                    <div className="text-6xl mb-4">🤖</div>
+                                    <p className="text-slate-600 font-bold text-lg mb-4">Hỏi AI Về Ngữ Pháp & Từ Vựng</p>
+                                    <p className="text-slate-500 text-sm mb-6">Đặt câu hỏi của bạn và nhận được giải thích chi tiết từ AI</p>
+                                    <button 
+                                        onClick={() => onSelectMode(GameMode.GRAMMAR_AI_CHAT)}
+                                        className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg"
+                                    >
+                                        Bắt Đầu Chat Ngay
+                                    </button>
+                                </div>
                             </>
                         )}
                     </div>
@@ -169,11 +184,11 @@ const DashboardHome: React.FC<HubProps> = ({ onSelectMode, onSelectGrammarTopic,
             {/* 4. Bottom Status Bar */}
             <div className="bg-white p-4 rounded-3xl shadow-lg border border-slate-100 flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-lg shadow-inner">
-                    {mainTab === 'vocabulary' ? '12' : 'GP'}
+                    {mainTab === 'vocabulary' ? '12' : mainTab === 'grammar' ? 'GP' : '🤖'}
                 </div>
                 <div className="flex-1">
                     <div className="font-black text-slate-800">
-                        {mainTab === 'vocabulary' ? 'Học Từ Vựng Theo Lớp' : 'Chuyên đề Ngữ pháp'}
+                        {mainTab === 'vocabulary' ? 'Học Từ Vựng Theo Lớp' : mainTab === 'grammar' ? 'Chuyên đề Ngữ pháp' : 'Chat AI Hỗ Trợ'}
                     </div>
                     <div className="text-xs text-slate-400 font-bold uppercase tracking-tight">Hệ thống giáo dục phổ thông</div>
                 </div>

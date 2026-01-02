@@ -4,7 +4,6 @@ import { generateGrammarQuiz, generateErrorCorrectionQuiz, generateNuanceQuiz, e
 import { GrammarTopic, DifficultyLevel, QuizResult, GrammarAssessment, GrammarQuestion, PracticeType, ErrorCorrectionQuestion, GrammarNuanceQuestion } from '../types';
 import Header from './common/Header';
 import InteractiveText from './common/InteractiveText';
-import GrammarAiChat from './GrammarAiChat'; // Import Chat component
 
 interface GrammarPracticeModeProps {
   topic: GrammarTopic;
@@ -49,7 +48,6 @@ const GrammarPracticeMode: React.FC<GrammarPracticeModeProps> = ({ topic, diffic
   const [results, setResults] = useState<QuizResult[]>([]);
   const [isFinished, setIsFinished] = useState(false);
   const [assessment, setAssessment] = useState<GrammarAssessment | null>(null);
-  const [showChat, setShowChat] = useState(false); // State for Chat Modal
 
   const speak = (text: string) => {
       if ('speechSynthesis' in window) {
@@ -201,11 +199,6 @@ const GrammarPracticeMode: React.FC<GrammarPracticeModeProps> = ({ topic, diffic
       return (
         <div className="flex flex-col items-center w-full min-h-screen pb-20 relative">
           <Header title={topic.title} onBackToMenu={onBack} />
-           {showChat && (
-              <div className="fixed inset-0 z-50 bg-white animate-fade-in">
-                  <GrammarAiChat topic={topic} onBack={() => setShowChat(false)} />
-              </div>
-          )}
 
           <div className="w-full max-w-3xl px-4">
             <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
@@ -275,7 +268,6 @@ const GrammarPracticeMode: React.FC<GrammarPracticeModeProps> = ({ topic, diffic
                 )}
             </div>
           </div>
-          <button onClick={() => setShowChat(true)} className="fixed bottom-6 right-6 p-4 bg-slate-900 text-white rounded-full shadow-2xl hover:bg-pink-600 transition-all transform hover:scale-110 z-40 border-2 border-white/20"><span className="text-2xl">🤖</span></button>
         </div>
       );
   } else if (practiceType === 'ERROR_CORRECTION') {
@@ -286,11 +278,6 @@ const GrammarPracticeMode: React.FC<GrammarPracticeModeProps> = ({ topic, diffic
       return (
         <div className="flex flex-col items-center w-full min-h-screen pb-20 relative">
           <Header title="Tìm lỗi sai" onBackToMenu={onBack} />
-           {showChat && (
-              <div className="fixed inset-0 z-50 bg-white animate-fade-in">
-                  <GrammarAiChat topic={topic} onBack={() => setShowChat(false)} />
-              </div>
-          )}
 
           <div className="w-full max-w-3xl px-4">
              <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
@@ -400,7 +387,6 @@ const GrammarPracticeMode: React.FC<GrammarPracticeModeProps> = ({ topic, diffic
                 )}
              </div>
           </div>
-          <button onClick={() => setShowChat(true)} className="fixed bottom-6 right-6 p-4 bg-slate-900 text-white rounded-full shadow-2xl hover:bg-pink-600 transition-all transform hover:scale-110 z-40 border-2 border-white/20"><span className="text-2xl">🤖</span></button>
         </div>
       );
   } else {
@@ -411,11 +397,6 @@ const GrammarPracticeMode: React.FC<GrammarPracticeModeProps> = ({ topic, diffic
       return (
         <div className="flex flex-col items-center w-full min-h-screen pb-20 relative">
           <Header title="Tư duy Ngữ cảnh" onBackToMenu={onBack} />
-           {showChat && (
-              <div className="fixed inset-0 z-50 bg-white animate-fade-in">
-                  <GrammarAiChat topic={topic} onBack={() => setShowChat(false)} />
-              </div>
-          )}
 
           <div className="w-full max-w-4xl px-4">
             <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
@@ -481,7 +462,6 @@ const GrammarPracticeMode: React.FC<GrammarPracticeModeProps> = ({ topic, diffic
                 )}
             </div>
           </div>
-          <button onClick={() => setShowChat(true)} className="fixed bottom-6 right-6 p-4 bg-slate-900 text-white rounded-full shadow-2xl hover:bg-pink-600 transition-all transform hover:scale-110 z-40 border-2 border-white/20"><span className="text-2xl">🤖</span></button>
         </div>
       );
   }

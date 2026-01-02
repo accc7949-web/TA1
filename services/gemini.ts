@@ -711,3 +711,28 @@ Make sure all information is accurate and educational. The examples should be na
         throw new Error(errorMessage);
     }
 };
+
+// Generate AI response for chat
+export const generateAIResponse = async (userMessage: string): Promise<string> => {
+    try {
+        const ai = getAI();
+        const model = ai.getGenerativeModel({ model: modelName });
+        
+        const prompt = `Bạn là một trợ lý AI học tiếng Anh tên là "EnglishMaster Assistant". 
+        
+Người dùng gửi tin nhắn: "${userMessage}"
+
+Hãy trả lời một cách thân thiện, hữu ích, và ngắn gọn (tối đa 2-3 câu).
+Nếu là câu hỏi về tiếng Anh, hãy giải thích chi tiết.
+Luôn trả lời bằng tiếng Việt, trừ khi người dùng hỏi bằng tiếng Anh.`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        return text || 'Xin lỗi, tôi không thể trả lời câu hỏi này.';
+    } catch (error: any) {
+        console.error('Error generating AI response:', error);
+        return 'Xin lỗi, đã xảy ra lỗi. Vui lòng thử lại sau.';
+    }
+};
