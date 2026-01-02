@@ -31,6 +31,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   // Mặc định là 'grammar'
   const [activeSection, setActiveSection] = useState<'vocab' | 'grammar'>('grammar');
 
+  // Sidebar vocabulary display options
+  const vocabGrade = CLASSROOMS[0].grades.find(g => g.name === 'Lớp 12');
+  const customVocabLabel = 'Từ Vựng Tùy Chỉnh';
+
   return (
     <>
       {isMobileOpen && (
@@ -46,13 +50,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Logo Section */}
         <div className="p-8 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => onSelectMode(GameMode.MAIN_MENU)}>
-             <div className="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200 border-2 border-red-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 border-2 border-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+             <div className="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
              </div>
              <span className={`text-2xl font-black text-blue-700 tracking-tighter ${isCollapsed ? 'md:hidden' : ''}`}>EnglishMaster</span>
           </div>
-          <button onClick={onToggleCollapse} className="hidden md:block p-2 text-slate-300 hover:text-slate-500 transition-colors border-2 border-purple-500">
-            <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 transition-transform border-2 border-green-400 ${isCollapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+          <button onClick={onToggleCollapse} className="hidden md:block p-2 text-slate-300 hover:text-slate-500 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
           </button>
         </div>
 
@@ -92,9 +96,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             {/* PHẦN DANH SÁCH CHI TIẾT - Thay đổi theo Tab dưới */}
             {activeSection === 'vocab' ? (
                 <div className={isCollapsed ? 'md:hidden' : 'space-y-4 pt-4 border-t border-slate-50'}>
-                    <span className="px-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Từ vựng lớp 12</span>
+                    <span className="px-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Học từ vựng theo lớp</span>
                     <div className="space-y-1">
-                        {CLASSROOMS[0].grades.find(g => g.name === 'Lớp 12')?.units.map(unit => (
+                        {vocabGrade?.units.map(unit => (
                             <button 
                                 key={unit.name} 
                                 onClick={() => { onSelectVocabularyUnit(unit); closeMobileSidebar(); }}

@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { User } from 'firebase/auth';
-import { Flashcard, GameMode, Unit, GrammarTopic, GrammarCategory, DifficultyLevel, ExamPracticeConfig, PracticeType } from './types';
+import { Flashcard, GameMode, Unit, GrammarTopic, GrammarCategory, DifficultyLevel, ExamPracticeConfig, PracticeType, VocabularyModule, ROLE_COLORS } from './types';
 import { observeAuthState, logoutUser, getUserProfile, UserProfile } from './services/auth';
 import Sidebar from './components/Sidebar';
 import DashboardHome from './components/DashboardHome';
@@ -29,6 +29,8 @@ import WritingPractice from './components/WritingPractice';
 import VocabSentencePractice from './components/VocabSentencePractice';
 import CustomGrammarManager from './components/CustomGrammarManager';
 import CustomVocabularyManager from './components/CustomVocabularyManager';
+import ModuleSelection from './components/ModuleSelection';
+import CustomModuleSelection from './components/CustomModuleSelection';
 import { CustomVocabUnit } from './types';
 
 import { ALL_VOCABULARY } from './constants'; 
@@ -42,11 +44,14 @@ const App: React.FC = () => {
   
   // Đặt MAIN_MENU làm mặc định để hiển thị DashboardHome chứa đầy đủ tính năng
   const [gameMode, setGameMode] = useState<GameMode>(GameMode.MAIN_MENU);
+  const [modeHistory, setModeHistory] = useState<GameMode[]>([GameMode.MAIN_MENU]);
   const [detailWord, setDetailWord] = useState<string | null>(null);
   
   // Vocabulary State
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [selectedWords, setSelectedWords] = useState<Flashcard[]>([]);
+  const [selectedModule, setSelectedModule] = useState<VocabularyModule | null>(null);
+  const [selectedCustomVocabUnit, setSelectedCustomVocabUnit] = useState<CustomVocabUnit | null>(null);
   
   // Grammar State
   const [selectedGrammarCategory, setSelectedGrammarCategory] = useState<GrammarCategory | null>(null);
@@ -95,9 +100,11 @@ const App: React.FC = () => {
   const handleShowDetail = (word: string) => {
     setDetailWord(word);
   };
-  
+
+  // Navigation handler that tracks history
   const handleSelectMode = (mode: GameMode) => {
      setGameMode(mode);
+     setModeHistory(prev => [...prev, mode]);
      
      // Set specific flows based on entry point
      if (mode === GameMode.GRAMMAR_CATEGORY_SELECTION) {
@@ -107,44 +114,48 @@ const App: React.FC = () => {
      }
   };
 
+  // Go back to previous screen
+  const handleGoBack = () => {
+    if (modeHistory.length > 1) {
+      const newHistory = modeHistory.slice(0, -1);
+      const previousMode = newHistory[newHistory.length - 1];
+      setModeHistory(newHistory);
+      setGameMode(previousMode);
+    } else {
+      setGameMode(GameMode.MAIN_MENU);
+    }
+  };
+
   // Grammar Sidebar Selection (Direct to Theory)
   const handleSidebarGrammarTopicSelect = (topic: GrammarTopic) => {
       setSelectedGrammarTopic(topic);
       setGrammarFlow('theory');
-      setGameMode(GameMode.GRAMMAR_DETAIL);
+      handleSelectMode(GameMode.GRAMMAR_DETAIL);
   };
 
   // --- Vocabulary Logic ---
   const handleSidebarUnitSelect = (unit: Unit) => {
-    const allWords = unit.parts.flatMap(p => p.words);
-    setSelectedWords(allWords);
     setSelectedUnit(unit);
-    setGameMode(GameMode.FLASHCARD_MENU);
+    handleSelectMode(GameMode.MODULE_SELECTION);
+  };
+
+  // Module selection handler
+  const handleSelectModule = (module: VocabularyModule) => {
+    setSelectedModule(module);
+    setSelectedWords(module.words);
+    handleSelectMode(GameMode.FLASHCARD_MENU);
   };
 
   // Convert CustomVocabUnit to Unit format for compatibility
   const handleSelectCustomVocabUnit = (customUnit: CustomVocabUnit) => {
-    // Convert modules to parts format
-    const parts = customUnit.modules.map(module => ({
-      name: module.name,
-      words: module.words || [],
-    }));
-    
-    // Get all words from all modules
-    const allWords = parts.flatMap(p => p.words);
-    
-    // Check if there are any words
-    if (allWords.length === 0) {
-      alert('Unit này chưa có từ vựng nào. Vui lòng thêm học phần trước.');
-      return;
-    }
-    
-    const unit: Unit = {
-      name: customUnit.name,
-      parts: parts,
-    };
-    
-    handleSidebarUnitSelect(unit);
+    setSelectedCustomVocabUnit(customUnit);
+    handleSelectMode(GameMode.CUSTOM_MODULE_SELECTION);
+  };
+
+  // Custom module selection handler
+  const handleSelectCustomModule = (moduleName: string, moduleWords: any[]) => {
+    setSelectedWords(moduleWords);
+    handleSelectMode(GameMode.FLASHCARD_MENU);
   };
 
 
@@ -152,44 +163,44 @@ const App: React.FC = () => {
   const handleSelectGrammarCategory = (category: GrammarCategory) => {
       setSelectedGrammarCategory(category);
       if (grammarFlow === 'practice') {
-          setGameMode(GameMode.GRAMMAR_PRACTICE_SELECTION);
+          handleSelectMode(GameMode.GRAMMAR_PRACTICE_SELECTION);
       } else {
-          setGameMode(GameMode.GRAMMAR_THEORY_SELECTION); 
+          handleSelectMode(GameMode.GRAMMAR_THEORY_SELECTION); 
       }
   }
 
   const handleSelectGrammarTopicForTheory = (topic: GrammarTopic) => {
       setSelectedGrammarTopic(topic);
-      setGameMode(GameMode.GRAMMAR_DETAIL);
+      handleSelectMode(GameMode.GRAMMAR_DETAIL);
   }
 
   const handleSelectGrammarTopicForPractice = (topic: GrammarTopic) => {
     setSelectedGrammarTopic(topic);
-    setGameMode(GameMode.GRAMMAR_DIFFICULTY_SELECTION);
+    handleSelectMode(GameMode.GRAMMAR_DIFFICULTY_SELECTION);
   };
 
   const handleOpenAiChat = (topic: GrammarTopic) => {
       setSelectedGrammarTopic(topic);
-      setGameMode(GameMode.GRAMMAR_AI_CHAT);
+      handleSelectMode(GameMode.GRAMMAR_AI_CHAT);
   }
 
   const handleStartPracticeFromDetail = (topic: GrammarTopic) => {
       setSelectedGrammarTopic(topic);
       setGrammarFlow('practice');
-      setGameMode(GameMode.GRAMMAR_DIFFICULTY_SELECTION);
+      handleSelectMode(GameMode.GRAMMAR_DIFFICULTY_SELECTION);
   }
 
   const handleSelectParams = (level: DifficultyLevel, count: number, type: PracticeType) => {
       setSelectedDifficulty(level);
       setQuestionCount(count);
       setPracticeType(type);
-      setGameMode(GameMode.GRAMMAR_PRACTICE_MODE);
+      handleSelectMode(GameMode.GRAMMAR_PRACTICE_MODE);
   }
 
   // --- Exam Prep Logic ---
   const handleStartExam = (config: ExamPracticeConfig) => {
       setExamConfig(config);
-      setGameMode(GameMode.EXAM_PRACTICE_MODE);
+      handleSelectMode(GameMode.EXAM_PRACTICE_MODE);
   }
 
 
@@ -197,35 +208,49 @@ const App: React.FC = () => {
     switch (gameMode) {
       // --- VOCABULARY ---
       case GameMode.FLASHCARD_MENU:
-        return <FlashcardMenu setGameMode={setGameMode} onBackToMenu={() => setGameMode(GameMode.MAIN_MENU)} />;
+        return <FlashcardMenu setGameMode={setGameMode} onBackToMenu={handleGoBack} />;
+      case GameMode.MODULE_SELECTION:
+        if (!selectedUnit) return null;
+        return <ModuleSelection 
+                  unit={selectedUnit} 
+                  onSelectModule={handleSelectModule} 
+                  onBack={handleGoBack} 
+                />;
+      case GameMode.CUSTOM_MODULE_SELECTION:
+        if (!selectedCustomVocabUnit) return null;
+        return <CustomModuleSelection 
+                  customUnit={selectedCustomVocabUnit} 
+                  onSelectModule={handleSelectCustomModule} 
+                  onBack={handleGoBack} 
+                />;
       case GameMode.FLASHCARD_VIEW_ALL:
         if (selectedWords.length === 0) {
           return <div className="p-8 text-center text-gray-600">Không có từ vựng để hiển thị. Vui lòng chọn một unit.</div>;
         }
-        return <ViewAllCards vocabulary={selectedWords} onBack={() => setGameMode(GameMode.FLASHCARD_MENU)} showDetail={handleShowDetail} />;
+        return <ViewAllCards vocabulary={selectedWords} onBack={handleGoBack} showDetail={handleShowDetail} />;
       case GameMode.FLASHCARDS:
         if (selectedWords.length === 0) {
           return <div className="p-8 text-center text-gray-600">Không có từ vựng để học. Vui lòng chọn một unit.</div>;
         }
-        return <FlashcardMode vocabulary={selectedWords} onBackToMenu={() => setGameMode(GameMode.FLASHCARD_MENU)} showDetail={handleShowDetail} />;
+        return <FlashcardMode vocabulary={selectedWords} onBackToMenu={handleGoBack} showDetail={handleShowDetail} />;
       
       case GameMode.QUIZ_EN_TO_VI:
         if (selectedWords.length === 0) {
           return <div className="p-8 text-center text-gray-600">Không có từ vựng để làm quiz. Vui lòng chọn một unit.</div>;
         }
-        return <QuizEnToVi vocabulary={selectedWords} onBackToMenu={() => setGameMode(GameMode.FLASHCARD_MENU)} />;
+        return <QuizEnToVi vocabulary={selectedWords} onBackToMenu={handleGoBack} />;
       case GameMode.QUIZ_VI_TO_EN:
         if (selectedWords.length === 0) {
           return <div className="p-8 text-center text-gray-600">Không có từ vựng để làm quiz. Vui lòng chọn một unit.</div>;
         }
-        return <QuizViToEn vocabulary={selectedWords} onBackToMenu={() => setGameMode(GameMode.FLASHCARD_MENU)} />;
+        return <QuizViToEn vocabulary={selectedWords} onBackToMenu={handleGoBack} />;
        case GameMode.VOCAB_SENTENCE_PRACTICE:
             if (selectedWords.length === 0) {
               return <div className="p-8 text-center text-gray-600">Không có từ vựng để luyện tập. Vui lòng chọn một unit.</div>;
             }
             return <VocabSentencePractice 
                         vocabulary={selectedWords} 
-                        onBack={() => setGameMode(GameMode.FLASHCARD_MENU)} 
+                        onBack={handleGoBack} 
                         showDetail={handleShowDetail}
                     />;
       
@@ -236,7 +261,7 @@ const App: React.FC = () => {
              <GrammarMenu 
                 topics={selectedGrammarCategory.topics} 
                 onSelectTopic={handleSelectGrammarTopicForTheory} 
-                onBack={() => setGameMode(GameMode.MAIN_MENU)} 
+                onBack={handleGoBack} 
                 title={`Bài học: ${selectedGrammarCategory.name}`}
              />
          );
@@ -246,7 +271,7 @@ const App: React.FC = () => {
         return (
             <GrammarDetail 
                 topic={selectedGrammarTopic} 
-                onBack={() => setGameMode(GameMode.MAIN_MENU)} 
+                onBack={handleGoBack} 
                 showDetail={handleShowDetail} 
                 onOpenAiChat={handleOpenAiChat}
                 onStartPractice={handleStartPracticeFromDetail}
@@ -255,16 +280,16 @@ const App: React.FC = () => {
       
       case GameMode.GRAMMAR_AI_CHAT:
           if (!selectedGrammarTopic) return null;
-          return <GrammarAiChat topic={selectedGrammarTopic} onBack={() => setGameMode(GameMode.GRAMMAR_DETAIL)} />
+          return <GrammarAiChat topic={selectedGrammarTopic} onBack={handleGoBack} />
 
       case GameMode.GRAMMAR_CATEGORY_SELECTION:
           return (
               <GrammarCategorySelection 
                 onSelectCategory={handleSelectGrammarCategory} 
-                onBack={() => setGameMode(GameMode.MAIN_MENU)} 
+                onBack={handleGoBack} 
                 title="Ngữ Pháp EnglishMaster"
                 uid={user?.uid}
-                onCustomGrammar={() => setGameMode(GameMode.CUSTOM_GRAMMAR)}
+                onCustomGrammar={() => handleSelectMode(GameMode.CUSTOM_GRAMMAR)}
               />
           );
 
@@ -274,7 +299,7 @@ const App: React.FC = () => {
               <GrammarPracticeSelection 
                 topics={selectedGrammarCategory.topics}
                 onSelectTopic={handleSelectGrammarTopicForPractice} 
-                onBack={() => setGameMode(GameMode.MAIN_MENU)} 
+                onBack={handleGoBack} 
                 title={`Bài tập: ${selectedGrammarCategory.name}`}
               />
           );
@@ -284,7 +309,7 @@ const App: React.FC = () => {
           return (
               <GrammarDifficultySelection 
                 onSelectParams={handleSelectParams}
-                onBack={() => setGameMode(GameMode.GRAMMAR_DETAIL)}
+                onBack={handleGoBack}
                 topicTitle={selectedGrammarTopic.title}
               />
           )
@@ -297,7 +322,7 @@ const App: React.FC = () => {
                 difficulty={selectedDifficulty}
                 questionCount={questionCount}
                 practiceType={practiceType}
-                onBack={() => setGameMode(GameMode.GRAMMAR_DIFFICULTY_SELECTION)}
+                onBack={handleGoBack}
                 showDetail={handleShowDetail}
             />
           );
@@ -307,7 +332,7 @@ const App: React.FC = () => {
           return (
               <CustomGrammarManager 
                 uid={user.uid}
-                onBack={() => setGameMode(GameMode.GRAMMAR_CATEGORY_SELECTION)}
+                onBack={handleGoBack}
               />
           );
 
@@ -316,7 +341,7 @@ const App: React.FC = () => {
           return (
               <CustomVocabularyManager 
                 uid={user.uid}
-                onBack={() => setGameMode(GameMode.MAIN_MENU)}
+                onBack={handleGoBack}
                 onSelectUnit={handleSelectCustomVocabUnit}
               />
           );
@@ -326,7 +351,7 @@ const App: React.FC = () => {
           return (
               <ExamPrepMenu 
                 onStartExam={handleStartExam}
-                onBack={() => setGameMode(GameMode.MAIN_MENU)}
+                onBack={handleGoBack}
               />
           );
       
@@ -335,7 +360,7 @@ const App: React.FC = () => {
           return (
               <ExamPracticeMode 
                 config={examConfig}
-                onBack={() => setGameMode(GameMode.EXAM_PREP_MENU)}
+                onBack={handleGoBack}
               />
           );
 
@@ -412,25 +437,26 @@ const App: React.FC = () => {
           <div className="flex-1 flex flex-col h-full overflow-hidden relative">
             <div className="md:hidden bg-white p-4 border-b border-slate-200 flex items-center justify-between shadow-sm z-10">
                <span className="font-bold text-lg text-slate-700">EnglishMaster</span>
-               <div className="flex gap-2">
+               <div className="flex gap-2 items-center">
                  <button 
                    onClick={() => setShowProfileModal(true)}
-                   className="p-2 text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200"
-                   title="Xem thông tin"
+                   className={`w-10 h-10 rounded-full bg-gradient-to-br ${
+                     userProfile?.role ? ROLE_COLORS[userProfile.role].bg : 'from-blue-400 to-blue-600'
+                   } flex items-center justify-center text-white font-bold text-sm hover:ring-2 hover:ring-offset-2 transition-all ${
+                     userProfile?.role === 'admin' ? 'hover:ring-yellow-400' :
+                     userProfile?.role === 'moderator' ? 'hover:ring-purple-400' :
+                     userProfile?.role === 'ai_bot' ? 'hover:ring-cyan-400' :
+                     'hover:ring-blue-400'
+                   } ${userProfile?.role === 'admin' ? 'shadow-xl shadow-yellow-400/50' : userProfile?.role === 'ai_bot' ? 'shadow-xl shadow-cyan-400/30' : ''}`}
+                   title={userProfile?.displayName || 'Profile'}
                  >
-                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                   {userProfile?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                  </button>
                  <button 
                    onClick={() => setIsSidebarOpen(true)} 
                    className="p-2 text-slate-600 bg-slate-100 rounded-md"
                  >
                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                 </button>
-                 <button 
-                   onClick={handleLogout}
-                   className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
-                 >
-                   Đăng xuất
                  </button>
                </div>
             </div>
@@ -471,6 +497,7 @@ const App: React.FC = () => {
                 <UserProfileComponent 
                   user={user} 
                   onClose={() => setShowProfileModal(false)}
+                  onLogout={handleLogout}
                 />
               )}
 

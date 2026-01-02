@@ -21,9 +21,17 @@ export interface VocabularyPart {
   words: Flashcard[];
 }
 
+export interface VocabularyModule {
+  id: string;
+  name: string;
+  words: Flashcard[];
+  wordCount: number;
+}
+
 export interface Unit {
     name: string;
     parts: VocabularyPart[];
+    modules?: VocabularyModule[];
 }
 
 export interface Grade {
@@ -212,6 +220,8 @@ export enum GameMode {
   CLASSROOM_SELECTION,
   GRADE_SELECTION,
   UNIT_SELECTION,
+  MODULE_SELECTION, // Select which module/part to learn
+  CUSTOM_MODULE_SELECTION, // Select which custom module/part to learn
   FLASHCARD_MENU,
   FLASHCARDS,
   FLASHCARD_VIEW_ALL,
@@ -299,3 +309,42 @@ export interface CustomVocabUnit {
   createdAt: number;
   updatedAt: number;
 }
+
+// Role types for user profiles
+export type UserRole = 'admin' | 'user' | 'moderator' | 'ai_bot';
+
+export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
+  'admin': 'Admin',
+  'user': 'Học viên (Member)',
+  'moderator': 'Kiểm duyệt viên (Moderator)',
+  'ai_bot': 'Trợ lý ảo (AI Bot)'
+};
+
+export const ROLE_COLORS: Record<UserRole, { bg: string; text: string; badge: string; border: string; glow?: string }> = {
+  'admin': {
+    bg: 'from-yellow-400 to-yellow-600',
+    text: 'text-yellow-700',
+    badge: 'bg-yellow-400 border-yellow-500',
+    border: 'border-yellow-400',
+    glow: 'shadow-xl shadow-yellow-400/50'
+  },
+  'user': {
+    bg: 'from-blue-400 to-blue-600',
+    text: 'text-blue-700',
+    badge: 'bg-blue-400 border-blue-500',
+    border: 'border-blue-400'
+  },
+  'moderator': {
+    bg: 'from-purple-400 to-purple-600',
+    text: 'text-purple-700',
+    badge: 'bg-purple-400 border-purple-500',
+    border: 'border-purple-400'
+  },
+  'ai_bot': {
+    bg: 'from-cyan-400 to-cyan-600',
+    text: 'text-cyan-700',
+    badge: 'bg-cyan-400 border-cyan-500',
+    border: 'border-cyan-400',
+    glow: 'shadow-xl shadow-cyan-400/30'
+  }
+};

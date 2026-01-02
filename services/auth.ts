@@ -21,7 +21,8 @@ export interface UserProfile {
   email: string;
   displayName: string;
   avatar?: string;
-  isAdmin?: boolean;
+  role?: 'admin' | 'user' | 'moderator' | 'ai_bot';
+  isAdmin?: boolean; // Keep for backward compatibility
   createdAt: Timestamp;
   updatedAt: Timestamp;
   learningStats?: {
@@ -43,11 +44,13 @@ export const registerUser = async (email: string, password: string, displayName:
     });
 
     // Lưu thông tin vào Firestore
+    const isAdminUser = user.uid === "OvBehauvk4W55b7ovcnNRk3v0ps1" || user.email === "Shabbysan483@gmail.com";
     const userProfile: UserProfile = {
       uid: user.uid,
       email: user.email || "",
       displayName: displayName,
-      isAdmin: user.email === "Shabbysan483@gmail.com",
+      role: isAdminUser ? 'admin' : 'user',
+      isAdmin: isAdminUser,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       learningStats: {

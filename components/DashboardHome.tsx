@@ -79,51 +79,45 @@ const DashboardHome: React.FC<HubProps> = ({ onSelectMode, onSelectGrammarTopic,
                     <div className="space-y-2">
                         {mainTab === 'vocabulary' ? (
                             <>
-                                {CLASSROOMS[0].grades.map(grade => (
-                                    <div key={grade.name} className="space-y-1">
-                                        <button 
-                                            onClick={() => setSelectedGrade(selectedGrade === grade.name ? '' : grade.name)}
-                                            className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${selectedGrade === grade.name ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <AcademicCapIcon />
-                                                <span className="font-bold">{grade.name}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {selectedGrade === grade.name && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>}
-                                                <ChevronRightIcon />
-                                            </div>
-                                        </button>
-                                        
-                                        {selectedGrade === grade.name && (
-                                            <div className="pl-12 pr-4 py-2 space-y-1">
-                                                {grade.units.length > 0 ? grade.units.map(unit => (
-                                                    <button 
-                                                        key={unit.name} 
-                                                        onClick={() => onSelectVocabularyUnit(unit)}
-                                                        className="w-full text-left p-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all flex items-center justify-between group"
-                                                    >
-                                                        <span>{unit.name}</span>
-                                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">🚀</span>
-                                                    </button>
-                                                )) : <p className="text-slate-400 text-sm italic">Sẽ sớm cập nhật nội dung.</p>}
-                                            </div>
-                                        )}
+                                {/* Learn Vocabulary by Class Section */}
+                                <button 
+                                    onClick={() => setSelectedGrade(selectedGrade === 'all-grades' ? '' : 'all-grades')}
+                                    className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${selectedGrade === 'all-grades' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <AcademicCapIcon />
+                                        <span className="font-bold">Học Từ Vựng Theo Lớp</span>
                                     </div>
-                                ))}
-                                {/* Custom Vocabulary Button */}
-                                <div className="mt-4 pt-4 border-t border-slate-100">
-                                    <button 
-                                        onClick={() => onSelectMode(GameMode.CUSTOM_VOCABULARY)}
-                                        className="w-full flex items-center justify-between p-4 rounded-2xl transition-all bg-purple-50 text-purple-700 hover:bg-purple-100 group"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-2xl">📚</span>
-                                            <span className="font-bold">Từ Vựng Tùy Chỉnh</span>
-                                        </div>
+                                    <div className="flex items-center gap-2">
+                                        {selectedGrade === 'all-grades' && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>}
                                         <ChevronRightIcon />
-                                    </button>
-                                </div>
+                                    </div>
+                                </button>
+                                
+                                {/* Grade and Unit Selection */}
+                                {selectedGrade === 'all-grades' && (
+                                    <div className="pl-8 pr-4 py-2 space-y-2 border-l-2 border-blue-100">
+                                        {CLASSROOMS[0].grades.map(grade => (
+                                            <div key={grade.name} className="space-y-1">
+                                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 py-2">
+                                                    {grade.name}
+                                                </div>
+                                                <div className="space-y-1">
+                                                    {grade.units.length > 0 ? grade.units.map(unit => (
+                                                        <button 
+                                                            key={unit.name} 
+                                                            onClick={() => onSelectVocabularyUnit(unit)}
+                                                            className="w-full text-left p-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all flex items-center justify-between group"
+                                                        >
+                                                            <span>{unit.name}</span>
+                                                            <span className="opacity-0 group-hover:opacity-100 transition-opacity">🚀</span>
+                                                        </button>
+                                                    )) : <p className="text-slate-400 text-sm italic px-3">Sẽ sớm cập nhật nội dung.</p>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <>
@@ -153,14 +147,33 @@ const DashboardHome: React.FC<HubProps> = ({ onSelectMode, onSelectGrammarTopic,
                 </div>
             </div>
 
-            {/* 3. Bottom Status Bar */}
+            {/* 3. Custom Vocabulary Button (shown only when in vocabulary tab) */}
+            {mainTab === 'vocabulary' && (
+                <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                    <button 
+                        onClick={() => onSelectMode(GameMode.CUSTOM_VOCABULARY)}
+                        className="w-full flex items-center justify-between p-6 transition-all hover:bg-purple-50 group"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="text-4xl">📚</div>
+                            <div>
+                                <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Quản Lý Riêng</span>
+                                <span className="font-bold text-lg text-slate-800">Từ Vựng Tùy Chỉnh</span>
+                            </div>
+                        </div>
+                        <ChevronRightIcon />
+                    </button>
+                </div>
+            )}
+
+            {/* 4. Bottom Status Bar */}
             <div className="bg-white p-4 rounded-3xl shadow-lg border border-slate-100 flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-lg shadow-inner">
                     {mainTab === 'vocabulary' ? '12' : 'GP'}
                 </div>
                 <div className="flex-1">
                     <div className="font-black text-slate-800">
-                        {mainTab === 'vocabulary' ? selectedGrade : 'Chuyên đề Ngữ pháp'}
+                        {mainTab === 'vocabulary' ? 'Học Từ Vựng Theo Lớp' : 'Chuyên đề Ngữ pháp'}
                     </div>
                     <div className="text-xs text-slate-400 font-bold uppercase tracking-tight">Hệ thống giáo dục phổ thông</div>
                 </div>
